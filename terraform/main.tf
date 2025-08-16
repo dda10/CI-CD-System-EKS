@@ -58,13 +58,12 @@ data "aws_availability_zones" "available" {
 module "vpc" {
   source = "./modules/vpc"
 
-  vpc_cidr           = var.vpc_cidr
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, var.subnet_count)
-  project_name       = var.project_name
-  environment        = var.environment
-  worker_subnet_cidrs = var.worker_subnet_cidrs
-  pod_subnet_cidrs    = var.pod_subnet_cidrs
-  subnet_count        = var.subnet_count
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = slice(data.aws_availability_zones.available.names, 0, var.subnet_count)
+  project_name         = var.project_name
+  environment          = var.environment
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 # EKS Module
@@ -105,7 +104,7 @@ module "bastion_host" {
   source = "./modules/bastion_host"
 
   vpc_id           = module.vpc.vpc_id
-  public_subnet_id = module.vpc.worker_subnet_ids[0]
+  public_subnet_id = module.vpc.public_subnet_ids[0]
   project_name     = var.project_name
   environment      = var.environment
   aws_region       = var.aws_region
@@ -113,4 +112,5 @@ module "bastion_host" {
 
   depends_on = [module.eks]
 }
+
 

@@ -18,18 +18,15 @@ variable "environment" {
   type        = string
 }
 
-variable "worker_subnet_cidrs" {
-  description = "CIDR blocks for worker node subnets"
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets (ALB, NAT)"
   type        = list(string)
 }
 
-variable "pod_subnet_cidrs" {
-  description = "CIDR blocks for pod IP subnets"
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets (EKS workers)"
   type        = list(string)
 }
 
-variable "subnet_count" {
-  description = "Number of subnets to create"
-  type        = number
-  default     = 2
-}
+
+
