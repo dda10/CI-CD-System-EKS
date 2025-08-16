@@ -1,52 +1,4 @@
-resource "helm_release" "jenkins" {
-  name             = "jenkins"
-  repository       = "https://charts.jenkins.io"
-  chart            = "jenkins"
-  namespace        = "jenkins"
-  create_namespace = true
 
-  set {
-    name  = "controller.serviceType"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "controller.ingress.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "controller.ingress.ingressClassName"
-    value = "alb"
-  }
-
-  set {
-    name  = "controller.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme"
-    value = "internet-facing"
-  }
-
-  set {
-    name  = "controller.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type"
-    value = "ip"
-  }
-
-  set {
-    name  = "persistence.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "persistence.size"
-    value = "20Gi"
-  }
-  
-  set {
-    name  = "persistence.storageClass"
-    value = "gp3"
-  }
-
-  depends_on = [var.load_balancer_controller_ready]
-}
 
 # Jenkins IAM Role for IRSA
 resource "aws_iam_role" "jenkins" {
@@ -90,4 +42,5 @@ resource "aws_iam_role_policy" "jenkins" {
     ]
   })
 }
+
 

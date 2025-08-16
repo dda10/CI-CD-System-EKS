@@ -1,0 +1,71 @@
+global:
+  hosts:
+    domain: example.com
+    gitlab:
+      name: gitlab.example.com
+    registry:
+      name: registry.example.com
+  ingress:
+    enabled: true
+    configureCertmanager: false
+    class: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+  edition: ce
+  
+gitlab:
+  webservice:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1.4Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+  sidekiq:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 625Mi
+      limits:
+        cpu: 1
+        memory: 1.5Gi
+
+postgresql:
+  install: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+redis:
+  install: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+registry:
+  enabled: true
+  ingress:
+    enabled: true
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+  storage:
+    secret: gitlab-registry-storage
+    key: config
+    redirect:
+      disable: true
+
+gitlab-runner:
+  install: true
+  runners:
+    config: |
+      [[runners]]
+        [runners.kubernetes]
+          namespace = "gitlab"
+          image = "ubuntu:20.04"

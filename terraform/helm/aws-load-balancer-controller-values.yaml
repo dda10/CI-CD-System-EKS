@@ -1,0 +1,26 @@
+clusterName: ise-lab-sandbox
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::992382587337:role/ise-lab-sandbox-aws-load-balancer-controller
+region: ap-southeast-1
+vpcId: vpc-094f14601a3089fe0
+image:
+  repository: 602401143452.dkr.ecr.ap-southeast-1.amazonaws.com/amazon/aws-load-balancer-controller
+  tag: v2.8.0
+replicaCount: 2
+resources:
+  limits:
+    cpu: 200m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 200Mi
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: {}
+defaultTags: {}
+podDisruptionBudget:
+  maxUnavailable: 1
