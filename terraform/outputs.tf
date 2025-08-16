@@ -24,6 +24,7 @@ output "aws_load_balancer_controller_role_arn" {
 
 output "load_balancer_controller_ready" {
   value = helm_release.aws_load_balancer_controller
+  sensitive = true
 }
 
 

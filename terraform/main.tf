@@ -66,7 +66,6 @@ module "vpc" {
   environment          = var.environment
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
-
 }
 
 # EKS Module
@@ -80,16 +79,90 @@ module "eks" {
   node_instance_type = var.node_instance_type
 }
 
-# Jenkins Module
-module "jenkins" {
-  source = "./modules/jenkins"
+# IAM Role for AWS Load Balancer Controller
+resource "aws_iam_role" "aws_load_balancer_controller" {
+  name = "${var.project_name}-${var.environment}-aws-load-balancer-controller"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_issuer_url   = module.eks.oidc_issuer_url
-  load_balancer_controller_ready = helm_release.aws_load_balancer_controller
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = module.eks.oidc_provider_arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
+          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+        }
+      }
+    }]
+  })
+}
 
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
+  policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+  role       = aws_iam_role.aws_load_balancer_controller.name
+}
+
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_ec2" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
+  role       = aws_iam_role.aws_load_balancer_controller.name
+}
+
+# EBS CSI Driver IAM Role
+resource "aws_iam_role" "ebs_csi_driver" {
+  name = "${var.project_name}-${var.environment}-ebs-csi-driver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = module.eks.oidc_provider_arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
+          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  role       = aws_iam_role.ebs_csi_driver.name
+}
+
+# EFS CSI Driver IAM Role
+resource "aws_iam_role" "efs_csi_driver" {
+  name = "${var.project_name}-${var.environment}-efs-csi-driver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = module.eks.oidc_provider_arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
+          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:efs-csi-controller-sa"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "efs_csi_driver" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+  role       = aws_iam_role.efs_csi_driver.name
 }
 
 # Cert-manager
@@ -134,7 +207,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.eks.aws_load_balancer_controller_role_arn
+    value = aws_iam_role.aws_load_balancer_controller.arn
   }
 
   set {
@@ -171,6 +244,17 @@ resource "kubernetes_storage_class" "ebs_gp3" {
   depends_on = [module.eks]
 }
 
+# Jenkins Module
+module "jenkins" {
+  source = "./modules/jenkins"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_issuer_url   = module.eks.cluster_oidc_issuer_url
+  load_balancer_controller_ready = helm_release.aws_load_balancer_controller
+}
+
 # Bastion Host Module
 module "bastion_host" {
   source = "./modules/bastion_host"
@@ -182,5 +266,3 @@ module "bastion_host" {
   aws_region       = var.aws_region
   cluster_name     = "${var.project_name}-${var.environment}"
 }
-
-

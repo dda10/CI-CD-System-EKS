@@ -30,28 +30,10 @@ module "eks" {
     aws-ebs-csi-driver = {
       most_recent    = true
       before_compute = true
-      configuration_values = jsonencode({
-        controller = {
-          serviceAccount = {
-            annotations = {
-              "eks.amazonaws.com/role-arn" = aws_iam_role.ebs_csi_driver.arn
-            }
-          }
-        }
-      })
     }
     aws-efs-csi-driver = {
       most_recent    = true
       before_compute = true
-      configuration_values = jsonencode({
-        controller = {
-          serviceAccount = {
-            annotations = {
-              "eks.amazonaws.com/role-arn" = aws_iam_role.efs_csi_driver.arn
-            }
-          }
-        }
-      })
     }
 
   }
@@ -79,143 +61,11 @@ module "eks" {
 
 
 
-# IAM Role for AWS Load Balancer Controller
-resource "aws_iam_role" "aws_load_balancer_controller" {
-  name = "${var.project_name}-${var.environment}-aws-load-balancer-controller"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Federated = module.eks.oidc_provider_arn
-      }
-      Action = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
-          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
-        }
-      }
-    }]
-  })
-}
 
-resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
-  policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
-  role       = aws_iam_role.aws_load_balancer_controller.name
-}
 
-resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller_ec2" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
-  role       = aws_iam_role.aws_load_balancer_controller.name
-}
 
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
-# EBS CSI Driver IAM Role
-resource "aws_iam_role" "ebs_csi_driver" {
-  name = "${var.project_name}-${var.environment}-ebs-csi-driver"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Federated = module.eks.oidc_provider_arn
-      }
-      Action = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
-          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
-        }
-      }
-    }]
-  })
-}
 
-#EFS CSI Driver IAM Role
 
-resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-  role       = aws_iam_role.ebs_csi_driver.name
-}
-
-resource "aws_iam_role_policy" "ebs_csi_driver_additional" {
-  name = "${var.project_name}-${var.environment}-ebs-csi-additional"
-  role = aws_iam_role.ebs_csi_driver.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:DescribeInstances",
-          "ec2:DescribeSnapshots",
-          "ec2:DescribeVolumes",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeInstanceAttribute",
-          "ec2:DescribeInstanceTypes",
-          "ec2:DescribeRegions",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeVpcs"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role" "efs_csi_driver" {
-  name = "${var.project_name}-${var.environment}-efs-csi-driver"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Federated = module.eks.oidc_provider_arn
-      }
-      Action = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
-          "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:efs-csi-controller-sa"
-        }
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "efs_csi_driver" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-  role       = aws_iam_role.efs_csi_driver.name
-}
-
-resource "aws_iam_role_policy" "efs_csi_driver_additional" {
-  name = "${var.project_name}-${var.environment}-efs-csi-additional"
-  role = aws_iam_role.efs_csi_driver.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "elasticfilesystem:DescribeAccessPoints",
-          "elasticfilesystem:DescribeFileSystems",
-          "elasticfilesystem:DescribeMountTargets",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeSubnets"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
