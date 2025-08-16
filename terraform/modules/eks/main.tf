@@ -10,8 +10,7 @@ module "eks" {
   endpoint_public_access                   = true
   enable_cluster_creator_admin_permissions = true
   authentication_mode                      = "API_AND_CONFIG_MAP"
-  # enable_irsa                              = false
-  enable_irsa = true
+  enable_irsa                              = true
 
   addons = {
     coredns = {}
@@ -23,13 +22,13 @@ module "eks" {
       before_compute = true
       configuration_values = jsonencode({
         env = {
-          ENABLE_POD_ENI = "true"
+          ENABLE_POD_ENI               = "true"
           AWS_VPC_K8S_CNI_EXTERNALSNAT = "true"
         }
       })
     }
     aws-ebs-csi-driver = {
-     most_recent    = true
+      most_recent    = true
       before_compute = true
       configuration_values = jsonencode({
         controller = {
@@ -39,11 +38,11 @@ module "eks" {
             }
           }
         }
-      }) 
+      })
     }
     aws-efs-csi-driver = {
-      most_recent              = true
-      before_compute           = true
+      most_recent    = true
+      before_compute = true
       configuration_values = jsonencode({
         controller = {
           serviceAccount = {
@@ -78,63 +77,7 @@ module "eks" {
   }
 }
 
-# Cert-manager
-resource "helm_release" "cert_manager" {
-  name             = "cert-manager"
-  repository       = "https://charts.jetstack.io"
-  chart            = "cert-manager"
-  namespace        = "cert-manager"
-  version          = "v1.18.2"
-  create_namespace = true
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
-
-  depends_on = [module.eks]
-}
-
-# AWS Load Balancer Controller
-resource "helm_release" "aws_load_balancer_controller" {
-  name       = "aws-load-balancer-controller"
-  repository = "https://aws.github.io/eks-charts"
-  chart      = "aws-load-balancer-controller"
-  namespace  = "kube-system"
-  version    = "1.8.0"
-
-  set {
-    name  = "clusterName"
-    value = module.eks.cluster_name
-  }
-
-  set {
-    name  = "serviceAccount.create"
-    value = "true"
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = "aws-load-balancer-controller"
-  }
-
-  set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = aws_iam_role.aws_load_balancer_controller.arn
-  }
-
-  set {
-    name  = "region"
-    value = data.aws_region.current.id
-  }
-
-  set {
-    name  = "vpcId"
-    value = var.vpc_id
-  }
-
-  depends_on = [helm_release.cert_manager]
-}
 
 # IAM Role for AWS Load Balancer Controller
 resource "aws_iam_role" "aws_load_balancer_controller" {
@@ -276,27 +219,3 @@ resource "aws_iam_role_policy" "efs_csi_driver_additional" {
     ]
   })
 }
-
-# Default StorageClass for EBS
-resource "kubernetes_storage_class" "ebs_gp3" {
-  metadata {
-    name = "gp3"
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
-  }
-  storage_provisioner    = "ebs.csi.aws.com"
-  reclaim_policy        = "Delete"
-  volume_binding_mode   = "WaitForFirstConsumer"
-  allow_volume_expansion = true
-  
-  parameters = {
-    type = "gp3"
-    encrypted = "true"
-  }
-
-  depends_on = [module.eks]
-}
-
-
-
