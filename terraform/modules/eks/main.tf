@@ -29,14 +29,30 @@ module "eks" {
       })
     }
     aws-ebs-csi-driver = {
-      most_recent              = true
-      before_compute           = true
-      service_account_role_arn = aws_iam_role.ebs_csi_driver.arn
+     most_recent    = true
+      before_compute = true
+      configuration_values = jsonencode({
+        controller = {
+          serviceAccount = {
+            annotations = {
+              "eks.amazonaws.com/role-arn" = aws_iam_role.ebs_csi_driver.arn
+            }
+          }
+        }
+      }) 
     }
     aws-efs-csi-driver = {
       most_recent              = true
       before_compute           = true
-      service_account_role_arn = aws_iam_role.efs_csi_driver.arn
+      configuration_values = jsonencode({
+        controller = {
+          serviceAccount = {
+            annotations = {
+              "eks.amazonaws.com/role-arn" = aws_iam_role.efs_csi_driver.arn
+            }
+          }
+        }
+      })
     }
 
   }
@@ -173,7 +189,7 @@ resource "aws_iam_role" "ebs_csi_driver" {
         StringEquals = {
           "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
         }
-        StringLike = {
+        StringEquals = {
           "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
         }
       }
@@ -265,6 +281,26 @@ resource "aws_iam_role_policy" "efs_csi_driver_additional" {
   })
 }
 
+# Default StorageClass for EBS
+resource "kubernetes_storage_class" "ebs_gp3" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy        = "Delete"
+  volume_binding_mode   = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+  
+  parameters = {
+    type = "gp3"
+    encrypted = "true"
+  }
+
+  depends_on = [module.eks]
+}
 
 
 

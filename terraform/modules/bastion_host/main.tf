@@ -27,6 +27,11 @@ resource "aws_security_group" "bastion" {
   }
 }
 
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.bastion.name
+}
+
 resource "aws_iam_role" "bastion" {
   name = "${var.project_name}-${var.environment}-bastion-role"
   

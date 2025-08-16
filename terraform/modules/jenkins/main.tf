@@ -39,6 +39,12 @@ resource "helm_release" "jenkins" {
     name  = "persistence.size"
     value = "20Gi"
   }
+  
+  set {
+    name  = "persistence.storageClass"
+    value = "gp3"
+  }
+
   depends_on = [var.load_balancer_controller_ready]
 }
 

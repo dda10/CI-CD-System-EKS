@@ -23,12 +23,12 @@ resource "helm_release" "gitlab" {
 
   set {
     name  = "certmanager.install"
-    value = "true"
+    value = "false"
   }
 
   set {
     name  = "global.ingress.configureCertmanager"
-    value = "true"
+    value = "false"
   }
 
   set {
@@ -47,17 +47,17 @@ resource "helm_release" "gitlab" {
   }
 
   set {
-    name  = "global.ingress.annotations.kubernetes\\\\.io/ingress\\\\.class"
+    name  = "global.ingress.annotations.kubernetes\\.io/ingress\\.class"
     value = "alb"
   }
 
   set {
-    name  = "global.ingress.annotations.alb\\\\.ingress\\\\.kubernetes\\\\.io/scheme"
+    name  = "global.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme"
     value = "internet-facing"
   }
 
   set {
-    name  = "global.ingress.annotations.alb\\\\.ingress\\\\.kubernetes\\\\.io/target-type"
+    name  = "global.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type"
     value = "ip"
   }
 
@@ -83,4 +83,5 @@ resource "helm_release" "gitlab" {
 
   timeout = 600
 }
+
 
