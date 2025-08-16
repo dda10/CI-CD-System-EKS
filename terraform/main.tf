@@ -108,9 +108,7 @@ module "bastion_host" {
   project_name     = var.project_name
   environment      = var.environment
   aws_region       = var.aws_region
-  cluster_name     = module.eks.cluster_name
-
-  depends_on = [module.eks]
+  cluster_name = "${var.project_name}-${var.environment}"
 }
 
 

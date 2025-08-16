@@ -188,8 +188,6 @@ resource "aws_iam_role" "ebs_csi_driver" {
       Condition = {
         StringEquals = {
           "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
-        }
-        StringEquals = {
           "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
         }
       }
@@ -244,8 +242,6 @@ resource "aws_iam_role" "efs_csi_driver" {
       Condition = {
         StringEquals = {
           "${module.eks.cluster_oidc_issuer_url}:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
           "${module.eks.cluster_oidc_issuer_url}:sub" = "system:serviceaccount:kube-system:efs-csi-controller-sa"
         }
       }
