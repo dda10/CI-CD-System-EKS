@@ -1,8 +1,4 @@
-
-output "jenkins_namespace" {
-  value = "jenkins"
+output "jenkins_role_arn" {
+  value = aws_iam_role.jenkins.arn
 }
 
-output "jenkins_service" {
-  value = "jenkins-service"
-}

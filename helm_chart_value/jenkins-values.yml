@@ -1,0 +1,131 @@
+controller:
+  image:
+    registry: docker.io
+    repository: jenkins/jenkins
+    tag: jdk21
+  admin:
+    username: "admin"
+    password: "admin123"
+  numExecutors: 2
+  executorMode: "NORMAL"
+  serviceType: ClusterIP
+  servicePort: 8080
+  targetPort: 8080
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/healthcheck-path: /login
+      alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+      alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+      alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+      alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+      alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+    path: "/*"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  installPlugins:
+    - kubernetes:4358.vcfd9c5a_0a_f51
+    - workflow-aggregator:608.v67378e9d3db_1
+    - git:5.7.0
+    - configuration-as-code:1985.vdda_32d0c4ea_b_
+    - job-dsl:1.87
+    - uno-choice:2.8.2
+    - gitlab-plugin:1.9.9
+    - generic-webhook-trigger:2.4.1
+  javaOpts: "-Xmx3g -Djava.awt.headless=true"
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: Welcome to our CI\CD server.
+      kubernetes: |
+        jenkins:
+          clouds:
+            - kubernetes:
+                name: kubernetes
+                serverUrl: https://kubernetes.default:443
+                namespace: jenkins
+                jenkinsUrl: http://jenkins.jenkins.svc.cluster.local:8080
+                jenkinsTunnel: jenkins-agent.jenkins.svc.cluster.local:50000
+                connectTimeout: 60
+                readTimeout: 60
+                maxRequestsPerHostStr: 32
+                templates:
+                  - name: "jenkins-agent"
+                    namespace: "jenkins"
+                    label: "jenkins-agent"
+                    nodeUsageMode: "NORMAL"
+                    serviceAccount: "jenkins"
+                    showRawYaml: false
+                    containers:
+                      - name: jnlp
+                        image: jenkins/inbound-agent:latest
+                        resourceRequestCpu: "100m"
+                        resourceRequestMemory: "256Mi"
+                        resourceLimitCpu: "500m"
+                        resourceLimitMemory: "512Mi"
+                      - name: aws-cli
+                        image: amazon/aws-cli:latest
+                        command: "sleep"
+                        args: "infinity"
+                        ttyEnabled: true
+                        resourceRequestCpu: "100m"
+                        resourceRequestMemory: "128Mi"
+                        resourceLimitCpu: "200m"
+                        resourceLimitMemory: "256Mi"
+                      - name: kubectl
+                        image: bitnami/kubectl:latest
+                        command: "sleep"
+                        args: "infinity"
+                        ttyEnabled: true
+                        resourceRequestCpu: "100m"
+                        resourceRequestMemory: "128Mi"
+                        resourceLimitCpu: "200m"
+                        resourceLimitMemory: "256Mi"
+                      - name: ansible
+                        image: alpine/ansible
+                        command: "sleep"
+                        args: "infinity"
+                        ttyEnabled: true
+                        resourceRequestCpu: "100m"
+                        resourceRequestMemory: "128Mi"
+                        resourceLimitCpu: "200m"
+                        resourceLimitMemory: "256Mi"
+
+persistence:
+  enabled: true
+  storageClass: gp2
+  size: 20Gi
+  accessMode: ReadWriteOnce
+  reclaimPolicy: Retain
+serviceAccount:
+  create: true
+  name: jenkins
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::712375977057:role/ise-lab-sandbox-jenkins-role
+agent:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: jenkins/inbound-agent
+    tag: "4.11.2-4"
+  workingDir: "/home/jenkins/agent"
+  nodeUsageMode: "NORMAL"
+  customJenkinsLabels: []
+  resources:
+    requests:
+      cpu: "512m"
+      memory: "512Mi"
+    limits:
+      cpu: "512m"
+      memory: "512Mi"
+

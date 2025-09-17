@@ -18,9 +18,3 @@ variable "oidc_issuer_url" {
   type        = string
 }
 
-variable "load_balancer_controller_ready" {
-  description = "Load balancer controller dependency"
-  type        = any
-  default     = null
-}
-

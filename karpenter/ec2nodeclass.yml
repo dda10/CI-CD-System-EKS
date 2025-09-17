@@ -1,0 +1,42 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: t3-spot-class
+spec:
+  role: "ise-lab-ng-eks-node-group-20250819104457201400000001"
+  amiSelectorTerms:
+    - alias: "al2023@latest"
+  subnetSelectorTerms:
+    - tags:
+        Project: ise-lab
+        Environment: sandbox
+  securityGroupSelectorTerms:
+    - tags:
+        Project: ise-lab
+        Environment: sandbox
+  userData: |
+    MIME-Version: 1.0
+    Content-Type: multipart/mixed; boundary="//"
+
+    --//
+    Content-Type: application/node.eks.aws
+
+    ---
+    apiVersion: node.eks.aws/v1alpha1
+    kind: NodeConfig
+    spec:
+      cluster:
+        apiServerEndpoint: https://F8CAFF7FF2AB34538DADCA0D25407685.gr7.ap-southeast-1.eks.amazonaws.com
+        certificateAuthority: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJWVpYOHVBSzN0Nm93RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRBNE1Ua3hNRFExTVRsYUZ3MHpOVEE0TVRjeE1EVXdNVGxhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUM1bVhzWnFkSDg0UVFjaDh1eE5HZ0laNDg1eHJUUjNkOXNWNWlETGdQUFlnRE5jbGwyeXYrbUNwaVYKUnVvWGJPVTZIeU5NaXJGcXBUS0hCeXhGT2cxdko0MmVLak5rZzNhSHF1bHpSRkRKclE3TDYzWXo2REpuREV2bwp6b1A3QmVmNXIwTjBzbFNSUXk4T3hUaFNqV1ZTc0hyMFZBb2dwdEFVWmUyc2NkOE5yTHNtNk5CZjg4b3haaElWCi9Fb2xqc09qS0dYVjNFSWJKcE1YcFpER3UzeVZXdFVIaTRnTVppQzlJbXcxSFdhZyt4YlZ3NFZ4dXdoL3VwTmgKWUcvalFzMG1SbFQ1L2pZMDd3T3ROcDNyRkRUc1NYOENaZ0xmcVYzVCtXanhqNk5JLzJSalczbWNaZWkyVGlqVQpBQlVwaWV4MXhDSkxzWWJIWlJUZ0ZmdkNIb0NMQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJTeFFUWnp6ekhSMHdmUVRiUzJoQVZjZmlZK3RUQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQllIYVBRRFkzcgpFR2VEREJuK1huWVJZTDF3S1c1d2VqZEg4L0pmQ3RZem5Hb1NnL3dSWG5xaXFGMG5Ma0drQWQ0WmlZaUpicjY2CnUxUUUwV1BFTUZKUEJyNGRZRzJqVll3NFJBRjFoTEU0ZzdnbjZLY0VNb0VnUlhXQjd4VVA4R1UrcWhjbDNqdUUKYUY0dCtSRnQ2QzRqcElkZ0p0djNlUG9lbUJ2ZGE4MFU2ZUh3SlEwemFicm1CdzA5bUU1eVFDbFB5Q0VhaWRlTgpyYkFGVDJ5MVFEZkFUWVBRYUp3RVZnamhSb2FhemRYY0dENTQxMy9jeGI5SldFOUtkU1Mvb2QvcGYwWXV6NWQ3Cmlaam42bHJndXRXYWt3SVlJTkxaTVZmNUcrZzdIS0ZYQmlNVWFuSVpGMnFNUGJueTZXeHUyYUxURjIxckFtMlkKYytoZzkwUFVEMHpFCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        cidr: 172.20.0.0/16
+        name: ise-lab-sandbox
+      kubelet:
+        config:
+          maxPods: 11
+          clusterDNS:
+          - 172.20.0.10
+        flags:
+        - "--node-labels=eks.amazonaws.com/sourceLaunchTemplateVersion=1,eks.amazonaws.com/nodegroup-image=ami-0bccea048c39c015b,eks.amazonaws.com/capacityType=SPOT,eks.amazonaws.com/nodegroup=ise-lab-ng-20250820112821817300000002,eks.amazonaws.com/sourceLaunchTemplateId=lt-0279967ccca40ef0a"
+
+    --//--
+

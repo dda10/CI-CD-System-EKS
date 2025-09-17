@@ -18,10 +18,15 @@ output "cluster_oidc_issuer_url" {
   value = module.eks.cluster_oidc_issuer_url
 }
 
+output "oidc_issuer_url" {
+  value = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
+}
 
+output "aws_load_balancer_controller_role_arn" {
+  value = aws_iam_role.aws_load_balancer_controller.arn
+}
 
-
-
-
-
+output "alb_security_group_id" {
+  value = aws_security_group.alb.id
+}
 

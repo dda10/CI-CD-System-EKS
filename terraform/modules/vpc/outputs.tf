@@ -10,8 +10,3 @@ output "private_subnet_ids" {
   value = module.vpc.private_subnets
 }
 
-# For EKS worker nodes (private subnets)
-output "worker_subnet_ids" {
-  value = module.vpc.private_subnets
-}
-

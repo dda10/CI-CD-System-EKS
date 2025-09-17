@@ -1,3 +1,4 @@
+# Main VPC for EKS workers
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -7,7 +8,10 @@ module "vpc" {
 
   public_subnets  = var.public_subnet_cidrs
   private_subnets = var.private_subnet_cidrs
-  
+
+  # Secondary CIDR for pod networking
+  secondary_cidr_blocks = [var.pod_cidr]
+
   map_public_ip_on_launch = true
 
   enable_nat_gateway   = false
@@ -21,7 +25,7 @@ module "vpc" {
   }
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"                             = "1"
+    "kubernetes.io/role/internal-elb"                              = "1"
     "kubernetes.io/cluster/${var.project_name}-${var.environment}" = "owned"
   }
 
@@ -31,3 +35,4 @@ module "vpc" {
     Project     = var.project_name
   }
 }
+

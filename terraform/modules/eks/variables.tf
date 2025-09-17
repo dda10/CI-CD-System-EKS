@@ -3,8 +3,8 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "worker_subnet_ids" {
-  description = "Worker node subnet IDs"
+variable "public_subnet_ids" {
+  description = "Public subnet IDs for EKS nodes"
   type        = list(string)
 }
 
@@ -22,3 +22,4 @@ variable "node_instance_type" {
   description = "EKS node instance type"
   type        = string
 }
+

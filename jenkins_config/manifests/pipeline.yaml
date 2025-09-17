@@ -1,0 +1,13 @@
+jobs:
+  - name: EC2 Operations
+    type: SINGLE
+    git_path: sre/ec2-operation
+    script_path: ec2-operations.groovy
+    branch: main
+
+  - name: RDS Operations
+    type: SINGLE
+    git_path: sre/rds-operation
+    script_path: rds-operations.groovy
+    branch: main
+

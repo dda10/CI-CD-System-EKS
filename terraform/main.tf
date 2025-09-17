@@ -1,4 +1,10 @@
 terraform {
+  backend "s3" {
+    bucket = "ise-lab-sandbox-tfstate"
+    key    = "terraform.tfstate"
+    region = "ap-southeast-1"
+  }
+
   required_version = ">= 1.0"
   required_providers {
     aws = {
@@ -9,12 +15,16 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.1"
     }
+
+
   }
 }
 
 provider "aws" {
   region = var.aws_region
 }
+
+
 
 data "aws_availability_zones" "available" {
   state = "available"
@@ -30,20 +40,21 @@ module "vpc" {
   environment          = var.environment
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
+  pod_cidr             = var.pod_cidr
 }
 
 # EKS Module
 module "eks" {
   source = "./modules/eks"
 
-  vpc_id             = module.vpc.vpc_id
-  worker_subnet_ids  = module.vpc.worker_subnet_ids
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+
   project_name       = var.project_name
   environment        = var.environment
   node_instance_type = var.node_instance_type
+
 }
-
-
 
 # Bastion Host Module
 module "bastion_host" {
@@ -56,3 +67,27 @@ module "bastion_host" {
   aws_region       = var.aws_region
   cluster_name     = "${var.project_name}-${var.environment}"
 }
+
+# Jenkins Module
+module "jenkins" {
+  source = "./modules/jenkins"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  oidc_provider_arn = "arn:aws:iam::712375977057:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/F8CAFF7FF2AB34538DADCA0D25407685"
+  oidc_issuer_url   = "oidc.eks.ap-southeast-1.amazonaws.com/id/F8CAFF7FF2AB34538DADCA0D25407685"
+}
+
+
+
+module "karpenter" {
+  source = "./modules/karpenter"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  oidc_provider_arn = "arn:aws:iam::712375977057:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/F8CAFF7FF2AB34538DADCA0D25407685"
+  oidc_issuer_url   = "oidc.eks.ap-southeast-1.amazonaws.com/id/F8CAFF7FF2AB34538DADCA0D25407685"
+}
+
+
+

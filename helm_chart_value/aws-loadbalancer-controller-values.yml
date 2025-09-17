@@ -1,0 +1,25 @@
+clusterName: ise-lab-sandbox
+serviceAccount:
+  create: false
+  name: aws-load-balancer-controller
+region: ap-southeast-1
+vpcId: vpc-0d766112e1138cea2
+image:
+  repository: public.ecr.aws/eks/aws-load-balancer-controller
+  tag: v2.13.4
+replicaCount: 2
+defaultTargetType: ip
+resources:
+  limits:
+    cpu: 200m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 200Mi
+podDisruptionBudget:
+  maxUnavailable: 1
+
+# Disable webhooks to avoid TLS issues
+enableServiceMutatorWebhook: false
+enableCertManager: false
+keepTLSSecret: false

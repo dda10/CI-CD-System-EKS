@@ -28,5 +28,8 @@ variable "private_subnet_cidrs" {
   type        = list(string)
 }
 
-
+variable "pod_cidr" {
+  description = "CIDR block for pod networking"
+  type        = string
+}
 

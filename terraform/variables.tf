@@ -40,5 +40,22 @@ variable "subnet_count" {
   default     = 2
 }
 
+variable "pod_cidr" {
+  description = "CIDR block for pod networking"
+  type        = string
+}
+
+variable "oidc_issuer_url" {
+  description = "EKS OIDC issuer URL"
+  type        = string
+  default     = ""
+}
+
+variable "oidc_provider_arn" {
+  description = "EKS OIDC provider ARN"
+  type        = string
+  default     = ""
+}
+
 
 
